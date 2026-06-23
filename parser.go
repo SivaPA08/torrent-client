@@ -48,8 +48,11 @@ func (p *Parser)Parse()(any,error){
 	}
 	switch p.data[p.pos]{
 	case 'i':
+		return p.parseInt()
 	case 'l':
+		return p.parseList()
 	case 'd':
+		return p.parseDict()
 	default:
 		b:=p.data[p.pos]
 		if b>='0' && b<='9'{
@@ -58,7 +61,6 @@ func (p *Parser)Parse()(any,error){
 		return nil,errors.New("Invalid bin code")
 
 	}
-	return nil,nil
 }
 
 
@@ -111,7 +113,50 @@ func (p *Parser)parseString()([]byte,error){
 	return key,nil
 }
 
+func (p *Parser) parseList()([]any,error){
+	p.pos++ //skipping l
+	var res []any
+	for {
+		if p.pos>=len(p.data){
+			return nil,errors.New("early EOF in ParseList wtf")
+		}
+		if p.data[p.pos]=='e' {
+			break
+		}
+		value,err:=p.Parse()
+		if err!=nil {
+			return nil,err
+		}
+		res=append(res,value)
+	}
+	p.pos++ //skipping e
+	return res,nil
+}
 
+func (p *Parser)parseDict()(map[string]any,error){
+	p.pos++ //skipping d
+	res:=make(map[string]any)
+	for {
+		if p.pos>=len(p.data){
+			return nil,errors.New("early EOF in ParseDict wtf")
+		}
+		if p.data[p.pos]=='e' {
+			break
+		}
+		keyBytes,err:=p.parseString()
+		if err!=nil {
+			return nil,err
+		}
+		key:=string(keyBytes)
+		value,err:=p.Parse()
+		if err!=nil {
+			return nil,err
+		}
+		res[key]=value
+	}
+	p.pos++ //skipping e
+	return res,nil
+}
 func ExtractTorrent(root map[string]any)(Torrent,error){
 	torrent:=Torrent{}
 	return torrent,nil
