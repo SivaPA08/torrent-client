@@ -10,17 +10,17 @@ import (
 
 type Torrent struct{
 	Announce string
-	AnnouceList [][]string
+	AnnounceList [][]string
 	Name string
 	InfoHash []byte
 	PieceLength int64
-	TotalLenght int64
+	TotalLength int64
 	Pieces [][]byte
 	Files []TorrentFile
 }
 type TorrentFile struct{
 	Path []string
-	Lenght int64
+	Length int64
 }
 
 
@@ -33,7 +33,7 @@ type Parser struct{
 
 
 //constructor def
-func New(data []byte) *Parser{
+func new(data []byte) *Parser{
 	return &Parser{
 		data: data,
 		pos: 0,
@@ -42,7 +42,7 @@ func New(data []byte) *Parser{
 
 
 //generic parser 
-func (p *Parser)Parse()(any,error){
+func (p *Parser)parse()(any,error){
 	if p.pos>=len(p.data){
 		return nil,errors.New("End of data")
 	}
@@ -56,7 +56,7 @@ func (p *Parser)Parse()(any,error){
 	default:
 		b:=p.data[p.pos]
 		if b>='0' && b<='9'{
-			return nil,nil
+			return p.parseString()
 		}
 		return nil,errors.New("Invalid bin code")
 
@@ -105,7 +105,7 @@ func (p *Parser)parseString()([]byte,error){
 	}
 	p.pos++ //skipping :
 	end:=p.pos+length
-	if end>=len(p.data){
+	if end>len(p.data){
 		return nil,errors.New("early EOF wtf inside parseString")
 	}
 	key:=p.data[p.pos:end] //get the key
@@ -123,7 +123,7 @@ func (p *Parser) parseList()([]any,error){
 		if p.data[p.pos]=='e' {
 			break
 		}
-		value,err:=p.Parse()
+		value,err:=p.parse()
 		if err!=nil {
 			return nil,err
 		}
@@ -148,7 +148,7 @@ func (p *Parser)parseDict()(map[string]any,error){
 			return nil,err
 		}
 		key:=string(keyBytes)
-		value,err:=p.Parse()
+		value,err:=p.parse()
 		if err!=nil {
 			return nil,err
 		}
@@ -157,7 +157,80 @@ func (p *Parser)parseDict()(map[string]any,error){
 	p.pos++ //skipping e
 	return res,nil
 }
-func ExtractTorrent(root map[string]any)(Torrent,error){
+
+
+func extract(root map[string]any)(Torrent,error) {
 	torrent:=Torrent{}
+	//fetching announce
+	if v,ok:=root["announce"]; ok {
+		torrent.Announce=string(v.([]byte))
+	}
+	//fetching announce-list
+	if v,ok:=root["announce-list"];ok {
+		//do it later
+	}
+
+
+
+	//fetching info 
+	info,ok:=root["info"].(map[string]any)
+	if !ok {
+		return torrent,errors.New("missing info")
+	}
+
+
+
+	//takng name
+	torrent.Name=string(info["name"].([]byte))
+
+
+
+	//piece len
+	pieces:=info["pieces"].([]byte)
+	for i:=0;i<len(pieces);i+=20 { //20bytes for sha1
+		hash:=pieces[i:i+20]
+		torrent.Pieces=append(torrent.Pieces,hash) //appending to pices
+	}
+
+
+
+	//single file torrent
+	if v,ok:=info["length"]; ok {
+		torrent.TotalLength=v.(int64)
+	}
+
+
+
+	//multi file torrent
+	if v,ok:=info["files"]; ok {
+		files:=v.([]any)
+		for _,f:= range files {
+			file:=f.(map[string]any)
+			len:=file["length"].(int64)
+			path:=file["path"].([]any)
+			var parts []string
+			for _,p:=range path {
+				parts=append(parts,string(p.([]byte)))
+			}
+			torrent.Files=append(torrent.Files,TorrentFile{Path:parts,Length: len})
+			torrent.TotalLength+=len
+		}
+	}
 	return torrent,nil
+}
+func ExtractTorrent(data []byte)(Torrent,error){
+	p:=new(data)
+	rootAny,err:=p.parse()
+	if err!=nil {
+		return Torrent{},err
+	}
+	root,ok:=rootAny.(map[string]any)
+	if !ok {
+		return Torrent{},errors.New("top level myst be a dict")
+	}
+	if p.pos!=len(p.data){
+		return Torrent{},errors.New("leftover data found")
+	}
+	return extract(root) //this return (Torrent,error) type
+
 }
