@@ -167,7 +167,17 @@ func extract(root map[string]any)(Torrent,error) {
 	}
 	//fetching announce-list
 	if v,ok:=root["announce-list"];ok {
-		//do it later
+		tiers := v.([]any)
+		for _,tier :=range tiers {
+			trackers :=tier.([]any)
+			row:=[]string{}
+
+
+			for _,t :=range trackers {
+				row=append(row,string(t.([]byte)))
+			}
+			torrent.AnnounceList=append(torrent.AnnounceList,row)
+		}
 	}
 
 
