@@ -8,20 +8,6 @@ import (
 
 
 
-type Torrent struct{
-	Announce string
-	AnnounceList [][]string
-	Name string
-	InfoHash []byte
-	PieceLength int64
-	TotalLength int64
-	Pieces [][]byte
-	Files []TorrentFile
-}
-type TorrentFile struct{
-	Path []string
-	Length int64
-}
 
 
 
@@ -159,88 +145,19 @@ func (p *Parser)parseDict()(map[string]any,error){
 }
 
 
-func extract(root map[string]any)(Torrent,error) {
-	torrent:=Torrent{}
-	//fetching announce
-	if v,ok:=root["announce"]; ok {
-		torrent.Announce=string(v.([]byte))
-	}
-	//fetching announce-list
-	if v,ok:=root["announce-list"];ok {
-		tiers := v.([]any)
-		for _,tier :=range tiers {
-			trackers :=tier.([]any)
-			row:=[]string{}
-
-
-			for _,t :=range trackers {
-				row=append(row,string(t.([]byte)))
-			}
-			torrent.AnnounceList=append(torrent.AnnounceList,row)
-		}
-	}
-
-
-
-	//fetching info 
-	info,ok:=root["info"].(map[string]any)
-	if !ok {
-		return torrent,errors.New("missing info")
-	}
-
-
-
-	//takng name
-	torrent.Name=string(info["name"].([]byte))
-
-
-
-	//piece len
-	pieces:=info["pieces"].([]byte)
-	for i:=0;i<len(pieces);i+=20 { //20bytes for sha1
-		hash:=pieces[i:i+20]
-		torrent.Pieces=append(torrent.Pieces,hash) //appending to pices
-	}
-
-
-
-	//single file torrent
-	if v,ok:=info["length"]; ok {
-		torrent.TotalLength=v.(int64)
-	}
-
-
-
-	//multi file torrent
-	if v,ok:=info["files"]; ok {
-		files:=v.([]any)
-		for _,f:= range files {
-			file:=f.(map[string]any)
-			len:=file["length"].(int64)
-			path:=file["path"].([]any)
-			var parts []string
-			for _,p:=range path {
-				parts=append(parts,string(p.([]byte)))
-			}
-			torrent.Files=append(torrent.Files,TorrentFile{Path:parts,Length: len})
-			torrent.TotalLength+=len
-		}
-	}
-	return torrent,nil
-}
-func ExtractTorrent(data []byte)(Torrent,error){
+func ExtractTorrent(data []byte)(map[string]any,error){
 	p:=new(data)
 	rootAny,err:=p.parse()
 	if err!=nil {
-		return Torrent{},err
+		return nil,err
 	}
 	root,ok:=rootAny.(map[string]any)
 	if !ok {
-		return Torrent{},errors.New("top level myst be a dict")
+		return nil,errors.New("top level myst be a dict")
 	}
 	if p.pos!=len(p.data){
-		return Torrent{},errors.New("leftover data found")
+		return nil,errors.New("leftover data found")
 	}
-	return extract(root) //this return (Torrent,error) type
+	return root,nil 
 
 }

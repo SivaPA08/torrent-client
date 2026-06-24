@@ -6,22 +6,17 @@ import (
 )
 
 func main() {
-
 	data, err := os.ReadFile("torrent/arch.torrent")
-
 	if err != nil {
 		panic(err)
 	}
 
-	torrent, err :=ExtractTorrent(data)
-
+	root, err := ExtractTorrent(data)
 	if err != nil {
 		panic(err)
 	}
 
-	fmt.Println("Name:",torrent.Name,)
-	fmt.Println("Announce:",torrent.Announce,)
-	fmt.Println("Piece Length:",torrent.PieceLength,)
-	fmt.Println("Total Length:",torrent.TotalLength,)
-	fmt.Println("Pieces:",len(torrent.Pieces),)
+	for k, v := range root {
+		fmt.Printf("%q -> %T\n", k, v)
+	}
 }
