@@ -11,7 +11,7 @@ func main() {
 		panic(err)
 	}
 
-	root,infoHashPos, err := ExtractTorrent(data)
+	root, infoHashPos, err := ExtractTorrent(data)
 	if err != nil {
 		panic(err)
 	}
@@ -20,4 +20,11 @@ func main() {
 		fmt.Printf("%q -> %T\n", k, v)
 	}
 	fmt.Printf("%+v\n", infoHashPos)
+	hash := ComputeInfoHash(
+		&data,
+		infoHashPos.InfoStart,
+		infoHashPos.InfoEnd,
+	)
+
+	fmt.Printf("%x\n", hash)
 }
