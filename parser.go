@@ -7,13 +7,10 @@ import (
 
 
 
-
-
-
-
 type Parser struct{
 	data []byte
 	pos int
+	infoHash InfoHash
 }
 
 
@@ -134,9 +131,16 @@ func (p *Parser)parseDict()(map[string]any,error){
 			return nil,err
 		}
 		key:=string(keyBytes)
+		if key=="info" {
+			p.infoHash.InfoStart=p.pos
+		}
 		value,err:=p.parse()
+
 		if err!=nil {
 			return nil,err
+		}
+		if key=="info" {
+			p.infoHash.InfoEnd=p.pos
 		}
 		res[key]=value
 	}
@@ -145,19 +149,19 @@ func (p *Parser)parseDict()(map[string]any,error){
 }
 
 
-func ExtractTorrent(data []byte)(map[string]any,error){
+func ExtractTorrent(data []byte)(map[string]any,InfoHash,error){
 	p:=new(data)
 	rootAny,err:=p.parse()
 	if err!=nil {
-		return nil,err
+		return nil,InfoHash{},err
 	}
 	root,ok:=rootAny.(map[string]any)
 	if !ok {
-		return nil,errors.New("top level myst be a dict")
+		return nil,InfoHash{},errors.New("top level myst be a dict")
 	}
 	if p.pos!=len(p.data){
-		return nil,errors.New("leftover data found")
+		return nil,InfoHash{},errors.New("leftover data found")
 	}
-	return root,nil 
+	return root,p.infoHash,nil 
 
 }

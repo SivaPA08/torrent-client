@@ -11,7 +11,7 @@ func main() {
 		panic(err)
 	}
 
-	root, err := ExtractTorrent(data)
+	root,infohash, err := ExtractTorrent(data)
 	if err != nil {
 		panic(err)
 	}
@@ -19,4 +19,5 @@ func main() {
 	for k, v := range root {
 		fmt.Printf("%q -> %T\n", k, v)
 	}
+	fmt.Printf("infohash: %q\n", infohash)
 }
