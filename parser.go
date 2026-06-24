@@ -10,7 +10,7 @@ import (
 type Parser struct{
 	data []byte
 	pos int
-	infoHash InfoHash
+	infoHash InfoHashPos
 }
 
 
@@ -149,18 +149,18 @@ func (p *Parser)parseDict()(map[string]any,error){
 }
 
 
-func ExtractTorrent(data []byte)(map[string]any,InfoHash,error){
+func ExtractTorrent(data []byte)(map[string]any,InfoHashPos,error){
 	p:=new(data)
 	rootAny,err:=p.parse()
 	if err!=nil {
-		return nil,InfoHash{},err
+		return nil,InfoHashPos{},err
 	}
 	root,ok:=rootAny.(map[string]any)
 	if !ok {
-		return nil,InfoHash{},errors.New("top level myst be a dict")
+		return nil,InfoHashPos{},errors.New("top level myst be a dict")
 	}
 	if p.pos!=len(p.data){
-		return nil,InfoHash{},errors.New("leftover data found")
+		return nil,InfoHashPos{},errors.New("leftover data found")
 	}
 	return root,p.infoHash,nil 
 
