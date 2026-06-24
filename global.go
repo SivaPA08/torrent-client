@@ -1,6 +1,6 @@
 package main
 
-type InfoHash struct{
+type InfoHashPos struct{
 	InfoStart int 
 	InfoEnd int
 }
