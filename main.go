@@ -21,7 +21,7 @@ func main() {
 	}
 	fmt.Printf("%+v\n", infoHashPos)
 	hash := ComputeInfoHash(
-		&data,
+		data,
 		infoHashPos.InfoStart,
 		infoHashPos.InfoEnd,
 	)
