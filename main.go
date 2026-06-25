@@ -27,4 +27,6 @@ func main() {
 	)
 
 	fmt.Printf("%x\n", hash)
+	val, err := PeerId()
+	fmt.Println(string(val[:]))
 }
