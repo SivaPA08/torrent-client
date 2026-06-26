@@ -20,7 +20,7 @@ type TorrentInfo struct {
 	Length       int64
 	InfoHash     [20]byte
 	PieceLenght  int64
-	TotalLengthi int64
+	TotalLength  int64
 	Pieces       [][]byte
 	Files        []TorrentFile
 }
