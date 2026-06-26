@@ -11,7 +11,7 @@ func main() {
 		panic(err)
 	}
 
-	root, infoHashPos, err := ExtractTorrent(data)
+	root, _, err := ExtractTorrent(data)
 	if err != nil {
 		panic(err)
 	}
@@ -19,14 +19,9 @@ func main() {
 	for k, v := range root {
 		fmt.Printf("%q -> %T\n", k, v)
 	}
-	fmt.Printf("%+v\n", infoHashPos)
-	hash := ComputeInfoHash(
-		data,
-		infoHashPos.InfoStart,
-		infoHashPos.InfoEnd,
-	)
+	torrentInfo := TorrentInfo{
+		Name:        root["info"].(map[string]any)["name"].(string),
+		WebSeedList: root["info"].(map[string]any)["url-list"].([]string),
+	}
 
-	fmt.Printf("%x\n", hash)
-	val, err := PeerId()
-	fmt.Println(string(val[:]))
 }
