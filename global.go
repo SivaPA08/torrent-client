@@ -44,3 +44,9 @@ type AnnounceRequest struct {
 	Compact    bool
 	Event      string
 }
+
+type PieceJob struct {
+	Index int
+	Start int64
+	End   int64
+}
