@@ -7,20 +7,34 @@ import (
 	"sync"
 )
 
-func goRoutine(url string, start int64, end int64, file *os.File, wg *sync.WaitGroup) {
+func goRoutine(torrent TorrentInfo, start int64, end int64, file *os.File, wg *sync.WaitGroup) {
 	defer wg.Done()
-	fmt.Printf("Downloading %d-%d\n", start, end)
-	data, err := DownloadPiece(url, start, end)
-	if err != nil {
-		fmt.Println("Download Failed")
-		return
-	}
-	fmt.Printf("Downloaded %d bytes for %d-%d\n", len(data), start, end)
-	_, err = file.WriteAt(data, start)
-	if err != nil {
-		fmt.Println("Error while writting file")
+	var data []byte
+	var err error
+
+	for _, seed := range torrent.WebSeedList {
+		url := strings.TrimRight(seed, "/") + "/" + torrent.Name
+
+		fmt.Printf("Trying %s for %d-%d\n", seed, start, end)
+
+		data, err = DownloadPiece(url, start, end)
+		if err == nil {
+			fmt.Println("Success:", seed)
+			break
+		}
+
+		fmt.Println("Failed:", seed, err)
 	}
 
+	if err != nil {
+		fmt.Printf("All web seeds failed for %d-%d\n", start, end)
+		return
+	}
+
+	_, err = file.WriteAt(data, start)
+	if err != nil {
+		fmt.Println("Error writing file:", err)
+	}
 }
 
 func PieceDownload(torrent TorrentInfo) {
@@ -33,15 +47,6 @@ func PieceDownload(torrent TorrentInfo) {
 		return
 	}
 	defer file.Close()
-	url := strings.TrimRight(torrent.WebSeedList[0], "/") + "/" + torrent.Name
-	// start := int64(0)
-	// end := torrent.PieceLength - 1
-	//@dbg
-	// fmt.Println("Piece Length:", torrent.PieceLength)
-	// fmt.Println("start:", start)
-	// fmt.Println("end:", end)
-	//@dbg
-
 	var wg sync.WaitGroup
 	no_of_pieces := (torrent.TotalLength + torrent.PieceLength - 1) / torrent.PieceLength
 	fmt.Println("Pieces:", len(torrent.Pieces))
@@ -53,7 +58,7 @@ func PieceDownload(torrent TorrentInfo) {
 			end = torrent.TotalLength - 1
 		}
 
-		go goRoutine(url, start, end, file, &wg)
+		go goRoutine(torrent, start, end, file, &wg)
 	}
 	wg.Wait()
 
