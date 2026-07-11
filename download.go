@@ -32,7 +32,6 @@ func DownloadPiece(url string, start, end int64) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	fmt.Println("Received", len(data), "bytes")
 	return data, nil
 }
