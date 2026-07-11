@@ -16,10 +16,9 @@ type TorrentInfo struct {
 	Announce     string   //just added for future updates
 	AnnounceList []string //just added for future updates comming soon :)
 	WebSeedList  []string
-	PieceLength  int64
 	Length       int64
 	InfoHash     [20]byte
-	PieceLenght  int64
+	PieceLength  int64
 	TotalLength  int64
 	Pieces       [][]byte
 	Files        []TorrentFile

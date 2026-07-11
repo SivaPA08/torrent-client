@@ -32,14 +32,14 @@ func (t TorrentInfo) Print() {
 		len(t.WebSeedList),
 	)
 
-	for i, seed := range t.WebSeedList {
+	// for i, seed := range t.WebSeedList {
 
-		fmt.Printf(
-			"  [%d] %s\n",
-			i,
-			seed,
-		)
-	}
+	// 	fmt.Printf(
+	// 		"  [%d] %s\n",
+	// 		i,
+	// 		seed,
+	// 	)
+	// }
 }
 
 func main() {
@@ -90,4 +90,6 @@ func main() {
 	}
 
 	torrentInfo.Print()
+
+	PieceDownload(torrentInfo)
 }

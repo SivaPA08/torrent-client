@@ -1,6 +1,10 @@
 package main
 
-import "os"
+import (
+	"fmt"
+	"os"
+	"strings"
+)
 
 func PieceDownload(torrent TorrentInfo) {
 	file, err := os.OpenFile(
@@ -12,11 +16,21 @@ func PieceDownload(torrent TorrentInfo) {
 		return
 	}
 	defer file.Close()
-	data, err := DownloadPiece(torrent.WebSeedList[0], 0, torrent.PieceLenght)
+	url := strings.TrimRight(torrent.WebSeedList[0], "/") + "/" + torrent.Name
+	start := int64(0)
+	end := torrent.PieceLength - 1
+	//@dbg
+	fmt.Println("Piece Length:", torrent.PieceLength)
+	fmt.Println("start:", start)
+	fmt.Println("end:", end)
+	//@dbg
+
+	data, err := DownloadPiece(url, start, end)
 	if err != nil {
 		return
 	}
-	_, err = file.WriteAt(data, torrent.PieceLenght)
+
+	_, err = file.WriteAt(data, 0)
 	if err != nil {
 		return
 	}
